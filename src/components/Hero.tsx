@@ -113,7 +113,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
           >
             <div className="sidebox-card">
               <h3 className="sidebox-title">Why Brooksville Contracts LA</h3>
-              <div class="sidebox-list">
+              <div className="sidebox-list">
                 <div className="sidebox-item">
                   <span className="sidebox-step">01 / GEOGRAPHY</span>
                   <p className="sidebox-desc">Deep familiarity with Hernando County geological conditions and code compliance.</p>
