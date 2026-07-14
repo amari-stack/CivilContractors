@@ -116,8 +116,8 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
                 <Mail size={24} className="flex-shrink-0 text-orange-600 mt-1" />
                 <div>
                   <h4 className="contact-channel-label">General Office Email</h4>
-                  <a href="mailto:office@lacontractors.co" className="contact-channel-value block hover:text-orange-600 lowercase">
-                    office@lacontractors.co
+                  <a href="mailto:office@lacontractors.com" className="contact-channel-value block hover:text-orange-600 lowercase">
+                    office@lacontractors.com
                   </a>
                 </div>
               </div>
