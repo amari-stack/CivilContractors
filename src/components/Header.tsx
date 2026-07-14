@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, darkMode, onToggleTh
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
 
-      const sections = ['home', 'about', 'services', 'pricing', 'work', 'contact'];
+      const sections = ['home', 'about', 'services', 'pricing', 'work', 'faq', 'contact'];
       const scrollPosition = window.scrollY + 100;
 
       for (const section of sections) {
@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, darkMode, onToggleTh
 
         {/* Desktop Navigation links */}
         <nav className="desktop-nav" id="desktop-nav">
-          {['home', 'about', 'services', 'pricing', 'work', 'contact'].map((section) => (
+          {['home', 'about', 'services', 'pricing', 'work', 'faq', 'contact'].map((section) => (
             <button
               key={section}
               id={`nav-${section}`}
@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, darkMode, onToggleTh
 
       {/* Mobile Drawer Menu Panel */}
       <div className={`mobile-menu-drawer ${isMobileMenuOpen ? 'open' : ''}`} id="mobile-menu-drawer">
-        {['home', 'about', 'services', 'pricing', 'work', 'contact'].map((section) => (
+        {['home', 'about', 'services', 'pricing', 'work', 'faq', 'contact'].map((section) => (
           <button
             key={section}
             id={`mobile-nav-${section}`}

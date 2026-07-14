@@ -8,6 +8,7 @@ import { Work } from './components/Work';
 import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
 import { PageLoader } from './components/PageLoader';
+import { FAQ } from './components/FAQ';
 
 export const App: React.FC = () => {
   const [preFill, setPreFill] = useState<{
@@ -84,6 +85,7 @@ export const App: React.FC = () => {
         <Services onBookService={handleBookServiceDirect} />
         <Pricing onLockInEstimate={handleLockInEstimate} />
         <Work />
+        <FAQ />
         <Contact preFill={preFill} onClearPreFill={() => setPreFill(null)} />
       </main>
 
