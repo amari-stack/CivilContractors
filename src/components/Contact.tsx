@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Phone, MapPin, Clock, ShieldCheck, CheckCircle, Loader2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, ShieldCheck, CheckCircle, Loader2, AlertCircle, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { BookingProposal } from '../types';
 
 interface ContactProps {
@@ -10,6 +11,12 @@ interface ContactProps {
     triggerCount: number; // to detect changes
   } | null;
   onClearPreFill: () => void;
+}
+
+interface Toast {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
 }
 
 export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => {
@@ -23,10 +30,31 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
     notes: '',
   });
 
+  const [touched, setTouched] = useState({
+    name: false,
+    email: false,
+    phone: false,
+  });
+
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
+
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [ticketId, setTicketId] = useState('');
   const [showBadge, setShowBadge] = useState(false);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  };
 
   // Apply pre-filled values when they come from Estimator or Services
   useEffect(() => {
@@ -38,6 +66,7 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
         notes: preFill.notes,
       }));
       setShowBadge(true);
+      showToast('Project estimate details loaded into proposal form!', 'info');
       
       // Auto-hide the badge pulse after 5 seconds to look premium
       const timer = setTimeout(() => setShowBadge(false), 5000);
@@ -45,27 +74,78 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
     }
   }, [preFill]);
 
+  const validateField = (name: string, value: string) => {
+    let error = '';
+    if (name === 'name') {
+      if (!value.trim()) {
+        error = 'Full name is required.';
+      } else if (value.trim().length < 2) {
+        error = 'Name must be at least 2 characters.';
+      } else if (!/^[a-zA-Z\s'\-]+$/.test(value)) {
+        error = 'Name must only contain letters, spaces, hyphens, or apostrophes.';
+      }
+    } else if (name === 'email') {
+      if (!value.trim()) {
+        error = 'Email address is required.';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        error = 'Please enter a valid email address.';
+      }
+    } else if (name === 'phone') {
+      const digitsOnly = value.replace(/\D/g, '');
+      if (!value.trim()) {
+        error = 'Phone number is required.';
+      } else if (digitsOnly.length < 10) {
+        error = 'Phone number must contain at least 10 digits.';
+      }
+    }
+    setErrors((prev) => ({ ...prev, [name]: error }));
+    return error;
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'name' || name === 'email' || name === 'phone') {
+      validateField(name, value);
+    }
+  };
+
+  const handleBlur = (field: 'name' | 'email' | 'phone') => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    validateField(field, formData[field]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.email) {
-      alert('Please fill out the required Name, Phone, and Email fields.');
+    
+    // Validate all fields
+    const nameErr = validateField('name', formData.name);
+    const emailErr = validateField('email', formData.email);
+    const phoneErr = validateField('phone', formData.phone);
+
+    setTouched({
+      name: true,
+      email: true,
+      phone: true,
+    });
+
+    if (nameErr || emailErr || phoneErr) {
+      showToast('Please correct validation errors in the required fields.', 'error');
       return;
     }
 
     setIsSubmitting(true);
+    showToast('Submitting site proposal details...', 'info');
 
     // Simulate reliable API proposal submission
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
-      setTicketId(`LA-${Math.floor(10000 + Math.random() * 90000)}`);
+      const generatedId = `LA-${Math.floor(10000 + Math.random() * 90000)}`;
+      setTicketId(generatedId);
+      showToast('Proposal logged successfully! Direct dispatch notified.', 'success');
       onClearPreFill();
     }, 1500);
   };
@@ -79,6 +159,16 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
       service: 'General Contracting Consultation',
       scale: '',
       notes: '',
+    });
+    setTouched({
+      name: false,
+      email: false,
+      phone: false,
+    });
+    setErrors({
+      name: '',
+      email: '',
+      phone: '',
     });
     setIsSuccess(false);
     setTicketId('');
@@ -180,28 +270,52 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
                 {/* Form Fields Inputs */}
                 <div className="form-grid-2">
                   <div className="form-group">
-                    <label htmlFor="name-input">FULL NAME *</label>
+                    <label htmlFor="name-input" className="flex justify-between items-center w-full">
+                      <span>FULL NAME *</span>
+                      {touched.name && errors.name && (
+                        <span className="text-[10px] text-rose-500 font-mono tracking-tight lowercase">{errors.name}</span>
+                      )}
+                    </label>
                     <input 
                       type="text" 
                       id="name-input" 
                       name="name"
-                      className="form-control" 
+                      className={`form-control ${
+                        touched.name && errors.name 
+                          ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' 
+                          : touched.name && !errors.name && formData.name 
+                          ? 'border-emerald-500/60 focus:border-emerald-500 focus:ring-emerald-500/40' 
+                          : ''
+                      }`} 
                       placeholder="Jane Doe" 
                       value={formData.name}
                       onChange={handleInputChange}
+                      onBlur={() => handleBlur('name')}
                       required 
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="phone-input">DIRECT CELL PHONE *</label>
+                    <label htmlFor="phone-input" className="flex justify-between items-center w-full">
+                      <span>DIRECT CELL PHONE *</span>
+                      {touched.phone && errors.phone && (
+                        <span className="text-[10px] text-rose-500 font-mono tracking-tight lowercase">{errors.phone}</span>
+                      )}
+                    </label>
                     <input 
                       type="tel" 
                       id="phone-input" 
                       name="phone"
-                      className="form-control" 
+                      className={`form-control ${
+                        touched.phone && errors.phone 
+                          ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' 
+                          : touched.phone && !errors.phone && formData.phone 
+                          ? 'border-emerald-500/60 focus:border-emerald-500 focus:ring-emerald-500/40' 
+                          : ''
+                      }`} 
                       placeholder="(352) 555-0199" 
                       value={formData.phone}
                       onChange={handleInputChange}
+                      onBlur={() => handleBlur('phone')}
                       required 
                     />
                   </div>
@@ -209,15 +323,27 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
 
                 <div className="form-grid-2">
                   <div className="form-group">
-                    <label htmlFor="email-input">EMAIL ADDRESS *</label>
+                    <label htmlFor="email-input" className="flex justify-between items-center w-full">
+                      <span>EMAIL ADDRESS *</span>
+                      {touched.email && errors.email && (
+                        <span className="text-[10px] text-rose-500 font-mono tracking-tight lowercase">{errors.email}</span>
+                      )}
+                    </label>
                     <input 
                       type="email" 
                       id="email-input" 
                       name="email"
-                      className="form-control" 
+                      className={`form-control ${
+                        touched.email && errors.email 
+                          ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' 
+                          : touched.email && !errors.email && formData.email 
+                          ? 'border-emerald-500/60 focus:border-emerald-500 focus:ring-emerald-500/40' 
+                          : ''
+                      }`} 
                       placeholder="jane@company.com" 
                       value={formData.email}
                       onChange={handleInputChange}
+                      onBlur={() => handleBlur('email')}
                       required 
                     />
                   </div>
@@ -268,7 +394,7 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
                 <div className="form-group">
                   <label htmlFor="notes-textarea">ADDITIONAL SPECIFICATIONS OR DIRECTIONS</label>
                   <textarea 
-                    id="notes-textarea" 
+                     id="notes-textarea" 
                     name="notes"
                     rows={4} 
                     className="form-control resize-none" 
@@ -338,6 +464,50 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
 
         </div>
       </div>
+
+      {/* Floating Toast Notification Container */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+        <AnimatePresence>
+          {toasts.map((toast) => (
+            <motion.div
+              key={toast.id}
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
+              className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl border shadow-lg ${
+                toast.type === 'success'
+                  ? 'bg-slate-900 border-emerald-500/20 text-white'
+                  : toast.type === 'error'
+                  ? 'bg-slate-950 border-rose-500/30 text-white'
+                  : 'bg-slate-900 border-orange-500/20 text-white'
+              }`}
+            >
+              {toast.type === 'success' ? (
+                <CheckCircle className="text-emerald-500 mt-0.5 flex-shrink-0" size={18} />
+              ) : toast.type === 'error' ? (
+                <X className="text-rose-500 mt-0.5 flex-shrink-0" size={18} />
+              ) : (
+                <AlertCircle className="text-orange-500 mt-0.5 flex-shrink-0" size={18} />
+              )}
+              <div className="flex-grow">
+                <p className="text-[10px] font-semibold uppercase tracking-wider font-mono text-slate-400">
+                  {toast.type === 'success' ? 'Success' : toast.type === 'error' ? 'Error' : 'System Alert'}
+                </p>
+                <p className="text-xs text-slate-200 mt-0.5 font-sans leading-relaxed">
+                  {toast.message}
+                </p>
+              </div>
+              <button
+                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                className="text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0 mt-0.5"
+              >
+                <X size={14} />
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
     </section>
   );
 };
