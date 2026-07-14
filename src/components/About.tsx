@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Trophy, Shield, Heart, CheckCircle2, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 
 type TabId = 'history' | 'values' | 'community';
 
@@ -49,18 +50,25 @@ export const About: React.FC = () => {
   const activeContent = aboutTabsContent[activeTab];
 
   return (
-    <section id="about" className="section-py-light">
+    <section id="about" className="section-py-light dark:bg-slate-950">
       <div className="container">
-        <div className="about-grid">
+        <motion.div 
+          className="about-grid"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
           
           {/* Left Column: Media assets and Stat blocks */}
           <div className="about-visual-col" id="about-left-col">
             <div className="about-img-container">
               <div className="about-img-glow"></div>
               <div className="about-img-box">
-                <img 
+                <ImageWithSkeleton 
                   src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=700&q=80" 
                   alt="LA Contractors Site Ops" 
+                  className="w-full h-full object-cover"
                 />
                 <div className="about-floating-badge">
                   <Users size={16} className="text-orange-500" />
@@ -155,7 +163,7 @@ export const About: React.FC = () => {
             </div>
           </div>
 
-        </div>
+        </motion.div>
       </div>
     </section>
   );

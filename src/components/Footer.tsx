@@ -1,5 +1,5 @@
 import React from 'react';
-import { HardHat, Phone, Mail, MapPin, ChevronUp, Github } from 'lucide-react';
+import { Layers, HardHat, Phone, Mail, MapPin, ChevronUp, Github } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (sectionId: string) => void;
@@ -21,9 +21,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div className="footer-brand-sec">
             <div className="footer-logo" onClick={scrollToTop}>
               <div className="footer-logo-icon">
-                <HardHat size={18} />
+                <Layers size={18} />
               </div>
-              <span className="footer-logo-text">LA.C</span>
+              <span className="footer-logo-text">LA Contractors</span>
             </div>
             <p className="footer-brand-desc">
               Brooksville’s heavy site grading, retention excavation, and underground utility specialists. Delivering state-licensed, civil-certified excavation results across Hernando County since 2004.

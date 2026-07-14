@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { HardHat, Layers, Truck, CheckCircle2, X, PhoneCall } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Service } from '../types';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 
 interface ServicesProps {
   onBookService: (serviceName: string) => void;
@@ -108,22 +110,35 @@ export const Services: React.FC<ServicesProps> = ({ onBookService }) => {
       <div className="container">
         
         {/* Section Header */}
-        <div className="section-header">
+        <motion.div 
+          className="section-header"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <span className="section-subtitle">OUR CAPABILITIES</span>
           <h2 className="section-title">Our Primary Programs & Services</h2>
           <div className="section-divider"></div>
           <p className="section-desc">
             LA Contractors offers full-scale heavy site solutions. We own our fleet, hire local operators, and guarantee a standard of Brooksville work that stands the test of time.
           </p>
-        </div>
+        </motion.div>
 
         {/* Cards Grid */}
-        <div className="services-grid" id="services-cards-grid">
+        <motion.div 
+          className="services-grid" 
+          id="services-cards-grid"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+        >
           {Object.values(servicesData).map((service) => (
             <div className="service-card" key={service.id} id={`service-card-${service.id}`}>
               <div className="service-card-img-box">
                 <div className="service-card-img-overlay"></div>
-                <img src={service.image} alt={service.title} />
+                <ImageWithSkeleton src={service.image} alt={service.title} className="w-full h-full object-cover" />
                 <div className="service-card-icon">
                   {getIcon(service.icon)}
                 </div>
@@ -153,7 +168,7 @@ export const Services: React.FC<ServicesProps> = ({ onBookService }) => {
               </div>
             </div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* SERVICE DETAILED MODAL OVERLAY */}
@@ -168,7 +183,7 @@ export const Services: React.FC<ServicesProps> = ({ onBookService }) => {
           <div className="modal-container">
             {/* Modal Banner Photo */}
             <div className="modal-header-banner">
-              <img src={activeService.image} id="modal-banner-img" alt={activeService.title} />
+              <ImageWithSkeleton src={activeService.image} containerClassName="absolute inset-0" className="w-full h-full object-cover" alt={activeService.title} />
               <div className="modal-header-overlay"></div>
               <button 
                 id="close-service-modal" 

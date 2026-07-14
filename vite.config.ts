@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: process.env.GITHUB_ACTIONS === 'true' ? '/CivilContractors/' : '/',
+    base: process.env.GITHUB_ACTIONS === 'true' ? '/la-contractors/' : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

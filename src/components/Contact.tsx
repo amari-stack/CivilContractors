@@ -85,7 +85,7 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
   };
 
   return (
-    <section id="contact" className="section-py-light bg-slate-50">
+    <section id="contact" className="section-py-light bg-slate-50 dark:bg-slate-950">
       <div className="container">
         <div className="contact-grid">
           

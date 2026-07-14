@@ -7,6 +7,7 @@ import { Pricing } from './components/Pricing';
 import { Work } from './components/Work';
 import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
+import { PageLoader } from './components/PageLoader';
 
 export const App: React.FC = () => {
   const [preFill, setPreFill] = useState<{
@@ -15,6 +16,27 @@ export const App: React.FC = () => {
     notes: string;
     triggerCount: number;
   } | null>(null);
+
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode(!darkMode);
 
   const handleNavigate = (sectionId: string) => {
     const el = document.getElementById(sectionId);
@@ -52,8 +74,9 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="app-shell">
-      <Header onNavigate={handleNavigate} />
+    <div className="app-shell bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      <PageLoader />
+      <Header onNavigate={handleNavigate} darkMode={darkMode} onToggleTheme={toggleDarkMode} />
       
       <main>
         <Hero onNavigate={handleNavigate} />

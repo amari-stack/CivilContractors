@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, Info, Check } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface PricingProps {
   onLockInEstimate: (serviceTitle: string, scale: string, estimateText: string) => void;
@@ -78,48 +79,60 @@ export const Pricing: React.FC<PricingProps> = ({ onLockInEstimate }) => {
   };
 
   return (
-    <section id="pricing" className="section-py-light">
+    <section id="pricing" className="section-py-grey dark:bg-slate-900">
       <div className="container">
         
         {/* Section Header */}
-        <div className="section-header max-w-2xl mx-auto">
-          <span className="section-subtitle-light">LOCAL PRICING ENG</span>
-          <h2 className="section-title-light">Interactive Cost Estimator</h2>
-          <div className="section-divider-orange"></div>
-          <p className="section-desc-light">
+        <motion.div 
+          className="section-header max-w-2xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <span className="section-subtitle">LOCAL PRICING ENG</span>
+          <h2 className="section-title">Interactive Cost Estimator</h2>
+          <div className="section-divider"></div>
+          <p className="section-desc">
             We operate with absolute transparency. Use our real-time estimation engine below to calculate a ballpark proposal for clearing, utility piping, or bulk material dispatch.
           </p>
-        </div>
+        </motion.div>
 
         {/* Pricing Layout Container */}
-        <div className="pricing-container-grid">
+        <motion.div 
+          className="pricing-card"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+        >
           
           {/* Controls Column */}
-          <div className="pricing-controls-col">
-            <h3 className="pricing-col-title">
-              <Calculator size={18} />
+          <div className="pricing-inputs-col">
+            <h3 className="pricing-label flex items-center gap-2 mb-0">
+              <Calculator size={14} className="text-orange-600" />
               <span>CONFIGURE SERVICE SCALE</span>
             </h3>
 
             {/* Service selectors buttons */}
-            <div className="pricing-selectors" id="pricing-selectors">
+            <div className="pricing-toggle-group" id="pricing-selectors">
               <button 
                 id="pricing-select-site" 
-                className={`pricing-select-btn ${activeService === 'site' ? 'active' : ''}`}
+                className={`pricing-toggle-btn ${activeService === 'site' ? 'active' : ''}`}
                 onClick={() => setActiveService('site')}
               >
                 SITE DEV
               </button>
               <button 
                 id="pricing-select-pipe" 
-                className={`pricing-select-btn ${activeService === 'pipe' ? 'active' : ''}`}
+                className={`pricing-toggle-btn ${activeService === 'pipe' ? 'active' : ''}`}
                 onClick={() => setActiveService('pipe')}
               >
                 PIPE LAYING
               </button>
               <button 
                 id="pricing-select-materials" 
-                className={`pricing-select-btn ${activeService === 'materials' ? 'active' : ''}`}
+                className={`pricing-toggle-btn ${activeService === 'materials' ? 'active' : ''}`}
                 onClick={() => setActiveService('materials')}
               >
                 MATERIALS
@@ -127,28 +140,28 @@ export const Pricing: React.FC<PricingProps> = ({ onLockInEstimate }) => {
             </div>
 
             {/* Config Sliders Form Area */}
-            <div className="pricing-sliders-area">
+            <div className="pricing-dynamic-inputs">
               
               {/* Slider 1: Site Development acreage selection */}
               {activeService === 'site' && (
-                <div className="slider-group" id="slider-group-site">
+                <div className="pricing-slider-block" id="slider-group-site">
                   <div className="slider-header">
-                    <label htmlFor="pricing-acreage-slider" className="slider-label">PROJECT SIZE (ACRES)</label>
-                    <span className="slider-badge" id="badge-site-acres">
+                    <label htmlFor="pricing-acreage-slider" className="slider-title">PROJECT SIZE (ACRES)</label>
+                    <span className="slider-val-badge" id="badge-site-acres">
                       {acreage} {acreage === 1 ? 'Acre' : 'Acres'}
                     </span>
                   </div>
                   <input 
                     type="range" 
                     id="pricing-acreage-slider" 
-                    className="slider-control" 
+                    className="pricing-slider" 
                     min="1" 
                     max="15" 
                     step="0.5" 
                     value={acreage}
                     onChange={(e) => setAcreage(parseFloat(e.target.value))}
                   />
-                  <div className="slider-markers">
+                  <div className="slider-limits">
                     <span>1 Acre (Min)</span>
                     <span>5 Acres</span>
                     <span>10 Acres</span>
@@ -160,22 +173,22 @@ export const Pricing: React.FC<PricingProps> = ({ onLockInEstimate }) => {
 
               {/* Slider 2: Pipe Laying linear feet selection */}
               {activeService === 'pipe' && (
-                <div className="slider-group" id="slider-group-pipe">
+                <div className="pricing-slider-block" id="slider-group-pipe">
                   <div className="slider-header">
-                    <label htmlFor="pricing-feet-slider" className="slider-label">TOTAL PIPING DEPTH (LINEAR FEET)</label>
-                    <span className="slider-badge" id="badge-pipe-feet">{feet} Linear Feet</span>
+                    <label htmlFor="pricing-feet-slider" className="slider-title">TOTAL PIPING DEPTH (LINEAR FEET)</label>
+                    <span className="slider-val-badge" id="badge-pipe-feet">{feet} Linear Feet</span>
                   </div>
                   <input 
                     type="range" 
                     id="pricing-feet-slider" 
-                    className="slider-control" 
+                    className="pricing-slider" 
                     min="20" 
                     max="1000" 
                     step="10" 
                     value={feet}
                     onChange={(e) => setFeet(parseInt(e.target.value))}
                   />
-                  <div className="slider-markers">
+                  <div className="slider-limits">
                     <span>20 LF (Min)</span>
                     <span>300 LF</span>
                     <span>600 LF</span>
@@ -187,10 +200,10 @@ export const Pricing: React.FC<PricingProps> = ({ onLockInEstimate }) => {
 
               {/* Slider 3: Material Sales loads selection & materials items buttons */}
               {activeService === 'materials' && (
-                <div className="slider-group" id="slider-group-materials">
+                <div className="pricing-slider-block" id="slider-group-materials">
                   
                   {/* Sub Material select Buttons Grid */}
-                  <label className="slider-label mb-2">CHOOSE CORE MATERIAL TYPE</label>
+                  <label className="pricing-label mb-2">CHOOSE CORE MATERIAL TYPE</label>
                   <div className="pricing-materials-grid">
                     {(Object.keys(materialPrices) as MaterialType[]).map((mKey) => (
                       <button 
@@ -206,22 +219,22 @@ export const Pricing: React.FC<PricingProps> = ({ onLockInEstimate }) => {
                   </div>
 
                   <div className="slider-header">
-                    <label htmlFor="pricing-loads-slider" className="slider-label">TANDEM TRUCKLOADS ORDERED</label>
-                    <span className="slider-badge" id="badge-materials-loads">
+                    <label htmlFor="pricing-loads-slider" className="slider-title">TANDEM TRUCKLOADS ORDERED</label>
+                    <span className="slider-val-badge" id="badge-materials-loads">
                       {loads} {loads === 1 ? 'Load' : 'Loads'}
                     </span>
                   </div>
                   <input 
                     type="range" 
                     id="pricing-loads-slider" 
-                    className="slider-control" 
+                    className="pricing-slider" 
                     min="1" 
                     max="30" 
                     step="1" 
                     value={loads}
                     onChange={(e) => setLoads(parseInt(e.target.value))}
                   />
-                  <div className="slider-markers">
+                  <div className="slider-limits">
                     <span>1 Load (Min)</span>
                     <span>10 Loads</span>
                     <span>20 Loads</span>
@@ -235,7 +248,7 @@ export const Pricing: React.FC<PricingProps> = ({ onLockInEstimate }) => {
 
             {/* Dynamic Info Panel details */}
             <div className="pricing-info-block">
-              <Info size={18} className="flex-shrink-0" />
+              <Info size={18} className="flex-shrink-0 text-orange-600 mt-0.5" />
               <div>
                 <h4 className="pricing-info-title">BALLPARK ASSESSMENT ONLY</h4>
                 <p className="pricing-info-desc">
@@ -305,7 +318,7 @@ export const Pricing: React.FC<PricingProps> = ({ onLockInEstimate }) => {
             </div>
           </div>
 
-        </div>
+        </motion.div>
       </div>
     </section>
   );

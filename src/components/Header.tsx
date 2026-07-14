@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { HardHat, Phone, Calendar, Menu, X, Github } from 'lucide-react';
+import { Layers, Phone, Calendar, Menu, X, Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   onNavigate: (sectionId: string) => void;
+  darkMode: boolean;
+  onToggleTheme: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
+export const Header: React.FC<HeaderProps> = ({ onNavigate, darkMode, onToggleTheme }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
@@ -45,11 +47,11 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
         {/* Logo brand block */}
         <div className="logo" id="logo-container" onClick={() => handleNavClick('home')}>
           <div className="logo-icon">
-            <HardHat size={20} />
+            <Layers size={20} />
           </div>
           <div>
-            <span className="logo-text">LA.C</span>
-            <span className="logo-subtext">LA CONTRACTORS</span>
+            <span className="logo-text">LA Contractors</span>
+            <span className="logo-subtext">HEAVY CIVIL</span>
           </div>
         </div>
 
@@ -69,23 +71,21 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
         {/* Desktop CTAs */}
         <div className="header-actions">
+          <button 
+            onClick={onToggleTheme} 
+            className="theme-toggle-btn"
+            aria-label="Toggle Theme"
+            style={{ marginRight: '0.25rem' }}
+          >
+            {darkMode ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+
           <a href="tel:8134626154" className="header-phone" id="header-phone-link">
             <Phone size={14} />
             <span>(813) 462-6154</span>
           </a>
           
-          {/* GitHub Icon Link to enhance portfolio readiness */}
-          <a 
-            href="https://github.com/haywoodamari/la-contractors" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="btn-slate-outline btn-small flex items-center gap-1.5"
-            style={{ padding: '0.625rem 1rem' }}
-            title="View Code on GitHub"
-          >
-            <Github size={14} />
-            <span>GITHUB</span>
-          </a>
+
 
           <button 
             id="header-book-now-btn" 
@@ -99,16 +99,14 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
         {/* Mobile navigation actions */}
         <div className="mobile-header-actions">
-          <a 
-            href="https://github.com/haywoodamari/la-contractors" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="mobile-phone-btn" 
-            aria-label="View on GitHub"
-            title="GitHub"
+          <button 
+            onClick={onToggleTheme} 
+            className="theme-toggle-btn-mobile"
+            aria-label="Toggle Theme"
           >
-            <Github size={18} />
-          </a>
+            {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
           <a href="tel:8134626154" className="mobile-phone-btn" aria-label="Call LA Contractors">
             <Phone size={18} />
           </a>

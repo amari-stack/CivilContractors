@@ -226,11 +226,12 @@ header.scrolled {
 
 .logo-text {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 900;
   color: var(--color-slate-950);
-  letter-spacing: -0.05em;
+  letter-spacing: -0.02em;
   line-height: 1;
+  text-transform: uppercase;
 }
 
 .logo-subtext {
@@ -2640,11 +2641,12 @@ footer {
 
 .footer-logo-text {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 900;
   color: var(--color-white);
-  letter-spacing: -0.05em;
+  letter-spacing: -0.02em;
   line-height: 1;
+  text-transform: uppercase;
 }
 
 .footer-brand-desc {
@@ -2821,3 +2823,296 @@ footer {
 .back-to-top-btn:hover i {
   transform: translateY(-2px);
 }
+
+/* Theme Toggle Buttons */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background-color: var(--color-slate-50);
+  border: 1px solid var(--color-slate-200);
+  color: var(--color-slate-600);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--color-slate-100);
+  color: var(--color-orange-600);
+  border-color: var(--color-slate-300);
+}
+
+.theme-toggle-btn-mobile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background-color: var(--color-slate-50);
+  border: 1px solid var(--color-slate-200);
+  color: var(--color-slate-600);
+  margin-right: 0.5rem;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.theme-toggle-btn-mobile:hover {
+  background-color: var(--color-slate-100);
+}
+
+/* 10. Dark Mode Support */
+.dark {
+  background-color: var(--color-slate-950);
+  color: var(--color-slate-100);
+}
+
+.dark header {
+  background-color: var(--color-slate-950);
+  border-bottom-color: var(--color-slate-800);
+}
+
+.dark header.scrolled {
+  background-color: rgba(2, 6, 23, 0.95);
+  backdrop-filter: blur(12px);
+}
+
+.dark .logo-text {
+  color: var(--color-white);
+}
+
+.dark nav.desktop-nav button {
+  color: var(--color-slate-400);
+}
+
+.dark nav.desktop-nav button:hover {
+  color: var(--color-orange-500);
+  background-color: var(--color-slate-900);
+}
+
+.dark nav.desktop-nav button.active {
+  color: var(--color-orange-500);
+  background-color: var(--color-slate-800);
+}
+
+.dark .header-phone {
+  color: var(--color-slate-300);
+}
+
+.dark .mobile-menu-drawer {
+  background-color: var(--color-slate-950);
+  border-bottom-color: var(--color-slate-800);
+}
+
+.dark .mobile-menu-drawer button {
+  color: var(--color-slate-300);
+}
+
+.dark .mobile-menu-drawer button:hover {
+  background-color: var(--color-slate-900);
+}
+
+.dark .mobile-drawer-footer {
+  border-top-color: var(--color-slate-800);
+  color: var(--color-slate-300);
+}
+
+.dark .theme-toggle-btn {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+  color: var(--color-orange-500);
+}
+
+.dark .theme-toggle-btn:hover {
+  background-color: var(--color-slate-800);
+  color: var(--color-white);
+  border-color: var(--color-slate-700);
+}
+
+.dark .theme-toggle-btn-mobile {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+  color: var(--color-orange-500);
+}
+
+/* Section overrides */
+.dark .section-py-light {
+  background-color: var(--color-slate-950);
+  color: var(--color-slate-100);
+  border-bottom-color: var(--color-slate-900);
+}
+
+.dark .section-py-grey {
+  background-color: var(--color-slate-900);
+  color: var(--color-slate-100);
+  border-bottom-color: var(--color-slate-800);
+}
+
+/* About Section dark overrides */
+.dark .about-title {
+  color: var(--color-white);
+}
+
+.dark .about-p {
+  color: var(--color-slate-300);
+}
+
+.dark .about-stat-block {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+}
+
+.dark .about-stat-label {
+  color: var(--color-slate-400);
+}
+
+.dark .about-tabs-nav {
+  border-bottom-color: var(--color-slate-800);
+}
+
+.dark .about-tab-btn {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+  color: var(--color-slate-300);
+}
+
+.dark .about-tab-btn:hover {
+  color: var(--color-white);
+  background-color: var(--color-slate-800);
+  border-color: var(--color-slate-700);
+}
+
+.dark .about-tab-btn.active {
+  background-color: var(--color-orange-600);
+  border-color: var(--color-orange-600);
+  color: var(--color-white);
+}
+
+.dark .about-tab-panel {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+}
+
+/* Pricing Section dark overrides */
+.dark .pricing-card {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+}
+
+.dark .pricing-inputs-col {
+  background-color: var(--color-slate-900);
+}
+
+.dark .pricing-material-btn {
+  background-color: var(--color-slate-950);
+  border-color: var(--color-slate-800);
+  color: var(--color-slate-300);
+}
+
+.dark .pricing-material-btn:hover {
+  border-color: var(--color-slate-700);
+}
+
+.dark .pricing-material-btn.active {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-orange-600);
+  color: var(--color-white);
+}
+
+.dark .pricing-material-name {
+  color: var(--color-slate-100);
+}
+
+.dark .pricing-material-cost {
+  color: var(--color-slate-400);
+}
+
+.dark .pricing-info-block {
+  background-color: var(--color-slate-950);
+  border-color: var(--color-slate-800);
+}
+
+.dark .pricing-info-title {
+  color: var(--color-white);
+}
+
+.dark .pricing-info-desc {
+  color: var(--color-slate-400);
+}
+
+.dark .pricing-outputs-col {
+  border-top-color: var(--color-slate-800);
+}
+
+@media (min-width: 1024px) {
+  .dark .pricing-outputs-col {
+    border-left-color: var(--color-slate-800);
+  }
+}
+
+/* Contact Section dark overrides */
+.dark .contact-info-title {
+  color: var(--color-white);
+}
+
+.dark .contact-info-desc {
+  color: var(--color-slate-300);
+}
+
+.dark .contact-channel-item {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+}
+
+.dark .contact-channel-value {
+  color: var(--color-white);
+}
+
+.dark .contact-channel-hours {
+  color: var(--color-slate-300);
+}
+
+.dark .contact-trust-card {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+}
+
+.dark .contact-trust-desc {
+  color: var(--color-slate-300);
+}
+
+.dark .contact-form-col {
+  background-color: var(--color-slate-900);
+  border-color: var(--color-slate-800);
+}
+
+.dark .form-header {
+  border-bottom-color: var(--color-slate-800);
+}
+
+.dark .form-header-title {
+  color: var(--color-white);
+}
+
+.dark .form-group label {
+  color: var(--color-slate-400);
+}
+
+.dark .form-control {
+  background-color: var(--color-slate-950);
+  border-color: var(--color-slate-800);
+  color: var(--color-slate-100);
+}
+
+.dark .form-control:focus {
+  border-color: var(--color-orange-600);
+}
+
+/* Shimmer Animation for Skeletons */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+

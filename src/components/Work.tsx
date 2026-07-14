@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Calendar, Star, Award } from 'lucide-react';
 import { PortfolioItem, Testimonial } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 
 const portfolioItems: PortfolioItem[] = [
   {
@@ -156,7 +157,7 @@ export const Work: React.FC = () => {
               >
                 <div>
                   <div className="portfolio-card-img-box">
-                    <img src={item.image} alt={item.title} />
+                    <ImageWithSkeleton src={item.image} alt={item.title} className="w-full h-full object-cover" />
                     <span className="portfolio-card-badge">{item.category}</span>
                   </div>
                   <div className="portfolio-card-body">
@@ -227,11 +228,13 @@ export const Work: React.FC = () => {
                     {/* User profile details */}
                     <div className="testimonial-user flex justify-between items-center pt-4 border-t-2 border-[#1a253a]">
                       <div className="testimonial-user-info flex items-center gap-3">
-                        <img 
-                          src={currentTestimonial.avatar} 
-                          alt={currentTestimonial.name} 
-                          className="testimonial-avatar w-12 h-12 border-2 border-slate-700 object-cover" 
-                        />
+                        <div className="testimonial-avatar w-12 h-12 border-2 border-slate-700 rounded-full overflow-hidden">
+                          <ImageWithSkeleton 
+                            src={currentTestimonial.avatar} 
+                            alt={currentTestimonial.name} 
+                            className="w-full h-full object-cover" 
+                          />
+                        </div>
                         <div>
                           <h4 className="testimonial-name font-bold text-white uppercase text-xs tracking-wider">{currentTestimonial.name}</h4>
                           <p className="testimonial-role text-[10px] text-slate-400 font-mono tracking-widest mt-0.5">
