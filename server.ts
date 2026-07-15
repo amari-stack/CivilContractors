@@ -38,8 +38,16 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API Route for proposals
-  app.post('/api/proposal', async (req, res) => {
+  // Redirect root / to /CivilContractors/ in development so Vite handles the base path
+  app.get('/', (req, res, next) => {
+    if (process.env.NODE_ENV !== 'production') {
+      return res.redirect('/CivilContractors/');
+    }
+    next();
+  });
+
+  // API Route for proposals (supports direct endpoints and subpath base url endpoints)
+  app.post(['/api/proposal', '/CivilContractors/api/proposal'], async (req, res) => {
     try {
       const { name, email, phone, company, service, scale, notes } = req.body;
 
@@ -114,8 +122,15 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    // Serve static files both at root and under the base path /CivilContractors/
+    app.use('/CivilContractors', express.static(distPath));
     app.use(express.static(distPath));
+    
     app.get('*', (req, res) => {
+      // Prevent static asset falls-through from returning index.html
+      if (req.path.includes('/assets/')) {
+        return res.status(404).end();
+      }
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

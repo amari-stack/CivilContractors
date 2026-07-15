@@ -142,7 +142,9 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
 
     try {
       setDbError(null);
-      const response = await fetch('/api/proposal', {
+      const rawBaseUrl = (import.meta as any).env?.BASE_URL || '/';
+      const baseUrl = rawBaseUrl.replace(/\/$/, '');
+      const response = await fetch(`${baseUrl}/api/proposal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
