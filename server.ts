@@ -18,18 +18,18 @@ async function getMongoDb() {
     await mongoClient.connect();
   }
   
-  // Try to parse database name from URI, otherwise default to "la_contractors"
-  let dbName = 'la_contractors';
+  // Parse database name from URI if present, otherwise call db() with no argument
+  // to let MongoDB driver fall back to the default database configured in the URI
   try {
     const url = new URL(uri);
     const pathName = url.pathname.replace(/^\//, '');
-    if (pathName) {
-      dbName = pathName;
+    if (pathName && !pathName.startsWith('?')) {
+      return mongoClient.db(pathName);
     }
   } catch (e) {
-    // Use fallback if connection URI isn't standard
+    // Fall back to default
   }
-  return mongoClient.db(dbName);
+  return mongoClient.db();
 }
 
 async function startServer() {
@@ -84,9 +84,23 @@ async function startServer() {
       });
     } catch (error: any) {
       console.error('MongoDB operation failed:', error);
+      
+      let friendlyError = 'Failed to save proposal to MongoDB Atlas.';
+      let instruction = '';
+      
+      const errMsg = error?.message || '';
+      if (errMsg.includes('not allowed to do action') || errMsg.includes('unauthorized') || error?.code === 13) {
+        friendlyError = 'Database Write Permission Denied';
+        instruction = 'The MongoDB Atlas database user in your connection string lacks insert/write permissions. Please go to MongoDB Atlas -> Database Access, edit your user, and change their role to "Read and write to any database" or "Atlas admin".';
+      } else if (errMsg.includes('Authentication failed') || errMsg.includes('bad auth')) {
+        friendlyError = 'Database Authentication Failed';
+        instruction = 'The username or password in your MONGODB_URI is incorrect. Please verify your credentials in your MongoDB Atlas connection string.';
+      }
+      
       res.status(500).json({
-        error: 'Failed to save proposal to MongoDB Atlas.',
-        details: error?.message || String(error)
+        error: friendlyError,
+        details: error?.message || String(error),
+        instruction: instruction
       });
     }
   });
