@@ -117,7 +117,7 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
     validateField(field, formData[field]);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate all fields
@@ -139,15 +139,36 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
     setIsSubmitting(true);
     showToast('Submitting site proposal details...', 'info');
 
-    // Simulate reliable API proposal submission
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/proposal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit proposal.');
+      }
+
       setIsSubmitting(false);
       setIsSuccess(true);
-      const generatedId = `LA-${Math.floor(10000 + Math.random() * 90000)}`;
-      setTicketId(generatedId);
-      showToast('Proposal logged successfully! Direct dispatch notified.', 'success');
+      setTicketId(data.ticketId || `LA-${Math.floor(10000 + Math.random() * 90000)}`);
+      
+      if (data.fallback) {
+        showToast(data.message, 'info');
+      } else {
+        showToast(data.message || 'Proposal logged successfully! Direct dispatch notified.', 'success');
+      }
       onClearPreFill();
-    }, 1500);
+    } catch (err: any) {
+      console.error('Submission error:', err);
+      setIsSubmitting(false);
+      showToast(err.message || 'Could not reach backend server database dispatch.', 'error');
+    }
   };
 
   const handleReset = () => {
