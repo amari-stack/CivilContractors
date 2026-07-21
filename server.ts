@@ -3,15 +3,18 @@ import path from 'path';
 import { MongoClient } from 'mongodb';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
 let mongoClient: MongoClient | null = null;
 
 async function getMongoDb() {
-  const uri = process.env.MONGODB_URI;
+  const uri = process.env.MONGODB_URL || process.env.MONGODB_URI;
   if (!uri) {
-    throw new Error('MONGODB_URI environment variable is not defined');
+    throw new Error('Neither MONGODB_URL nor MONGODB_URI environment variable is defined');
   }
   if (!mongoClient) {
     mongoClient = new MongoClient(uri);
@@ -34,9 +37,34 @@ async function getMongoDb() {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
+  // Security & Middleware Configuration
+  app.use(helmet({
+    contentSecurityPolicy: false // Allows Vite inline scripts and standard app assets to load seamlessly
+  }));
+  app.use(cors());
   app.use(express.json());
+
+  // Express Rate Limiting for API routes
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes window
+    max: 100, // Limit each IP to 100 requests per 15 minutes
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests from this IP address, please try again later.' }
+  });
+  app.use('/api/', apiLimiter);
+  app.use('/CivilContractors/api/', apiLimiter);
+
+  // Health check endpoint for monitoring & Render deployment checks
+  app.get(['/api/health', '/CivilContractors/api/health'], (req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
+  });
 
   // Redirect root / to /CivilContractors/ in development so Vite handles the base path
   app.get('/', (req, res, next) => {
@@ -56,14 +84,14 @@ async function startServer() {
         return res.status(400).json({ error: 'Name, email, and phone are required.' });
       }
 
-      // Check if MONGODB_URI is provided
-      if (!process.env.MONGODB_URI) {
-        console.warn('⚠️ MONGODB_URI is not set. Falling back to simulated successful local dispatch.');
+      // Check if MONGODB_URL or MONGODB_URI is provided
+      if (!process.env.MONGODB_URL && !process.env.MONGODB_URI) {
+        console.warn('⚠️ MONGODB_URL / MONGODB_URI is not set. Falling back to simulated successful local dispatch.');
         return res.json({
           success: true,
           fallback: true,
           ticketId: `LA-${Math.floor(10000 + Math.random() * 90000)}`,
-          message: 'Proposal details verified locally! However, to persist this entry securely, configure your MONGODB_URI in the Settings menu.'
+          message: 'Proposal details verified locally! However, to persist this entry securely, configure your MONGODB_URL in Render environment variables.'
         });
       }
 
@@ -102,7 +130,7 @@ async function startServer() {
         instruction = 'The MongoDB Atlas database user in your connection string lacks insert/write permissions. Please go to MongoDB Atlas -> Database Access, edit your user, and change their role to "Read and write to any database" or "Atlas admin".';
       } else if (errMsg.includes('Authentication failed') || errMsg.includes('bad auth')) {
         friendlyError = 'Database Authentication Failed';
-        instruction = 'The username or password in your MONGODB_URI is incorrect. Please verify your credentials in your MongoDB Atlas connection string.';
+        instruction = 'The username or password in your MONGODB_URL is incorrect. Please verify your credentials in your MongoDB Atlas connection string.';
       }
       
       res.status(500).json({
@@ -136,7 +164,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Fullstack Server running on http://localhost:${PORT}`);
+    console.log(`Fullstack Server running on port ${PORT}`);
   });
 }
 
