@@ -180,8 +180,11 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
             details: data.details || ''
           });
         }
-        throw new Error(data.error || 'Failed to submit proposal.');
-      }
+       throw new Error(
+  data.message ||
+  data.error ||
+  "Failed to submit proposal."
+);
 
       setIsSubmitting(false);
       setIsSuccess(true);
