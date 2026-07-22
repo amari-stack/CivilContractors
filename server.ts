@@ -255,7 +255,6 @@ app.post(
 // Serve the Vite website from the dist folder
 // --------------------------------------------------
 
-const distPath = path.join(__dirname, "dist");
 
 app.use(express.static(distPath));
 
