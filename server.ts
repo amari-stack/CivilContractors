@@ -8,7 +8,7 @@ import express, {
 } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -97,7 +97,7 @@ interface ProposalDocument {
   updatedAt?: Date;
 }
 
-const proposalSchema = new Schema<ProposalDocument>(
+const proposalSchema = new mongoose.Schema<ProposalDocument>(
   {
     name: {
       type: String,
@@ -146,8 +146,8 @@ const proposalSchema = new Schema<ProposalDocument>(
 );
 
 const Proposal =
-  models.Proposal ||
-  model<ProposalDocument>("Proposal", proposalSchema);
+  mongoose.models.Proposal ||
+  mongoose.model<ProposalDocument>("Proposal", proposalSchema);
 
 // --------------------------------------------------
 // Health-check routes
