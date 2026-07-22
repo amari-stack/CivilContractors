@@ -26,16 +26,94 @@ const __dirname = path.dirname(__filename);
 const distPath = path.join(__dirname, "dist");
 
 // --------------------------------------------------
-// Security and middleware
+// Security and CORS
 // --------------------------------------------------
 
 app.set("trust proxy", 1);
 
 app.use(
   helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+
+        // Allow your website and Unsplash construction pictures.
+        imgSrc: [
+          "'self'",
+          "data:",
+          "blob:",
+          "https://images.unsplash.com",
+        ],
+
+        // Allow your website styles and Google Fonts.
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://fonts.googleapis.com",
+        ],
+
+        fontSrc: [
+          "'self'",
+          "data:",
+          "https://fonts.gstatic.com",
+        ],
+
+        scriptSrc: ["'self'"],
+
+        // Allow the frontend to communicate with the backend.
+        connectSrc: [
+          "'self'",
+          "https://lacontractors.onrender.com",
+          "https://amari-stack.github.io",
+        ],
+
+        objectSrc: ["'none'"],
+      },
+    },
+
     crossOriginResourcePolicy: {
       policy: "cross-origin",
     },
+  })
+);
+
+const allowedOrigins = new Set(
+  [
+    "https://lacontractors.onrender.com",
+    "https://amari-stack.github.io",
+    process.env.RENDER_EXTERNAL_URL,
+    "http://localhost:3000",
+    "http://localhost:5173",
+  ].filter((value): value is string => Boolean(value))
+);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow direct browser visits, health checks, and server requests.
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      console.error(`Blocked CORS origin: ${origin}`);
+
+      callback(
+        new Error("This website is not allowed to access the API.")
+      );
+    },
+
+    methods: ["GET", "POST", "OPTIONS"],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Accept",
+    ],
   })
 );
 
