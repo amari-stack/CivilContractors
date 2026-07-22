@@ -119,7 +119,7 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
     validateField(field, formData[field]);
   };
 
-  const handleSubmit = async (
+ const handleSubmit = async (
   event: React.FormEvent<HTMLFormElement>
 ): Promise<void> => {
   event.preventDefault();
@@ -200,18 +200,6 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
     setIsSubmitting(false);
   }
 };
-
-    if (nameErr || emailErr || phoneErr) {
-      showToast('Please correct validation errors in the required fields.', 'error');
-      return;
-    }
-
-    setIsSubmitting(true);
-    showToast('Submitting site proposal details...', 'info');
-
-      showToast(err.message || 'Could not reach backend server database dispatch.', 'error');
-    }
-  };
 
   const handleReset = () => {
     setFormData({
