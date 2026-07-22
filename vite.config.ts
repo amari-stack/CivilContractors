@@ -4,7 +4,7 @@ import path from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/CivilContractors/",
+  base: process.env.VITE_DEPLOY_BASE || "/",
 
   plugins: [react(), tailwindcss()],
 
