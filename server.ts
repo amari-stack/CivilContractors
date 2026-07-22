@@ -77,6 +77,10 @@ app.use(
   })
 );
 
+// --------------------------------------------------
+// CORS configuration
+// --------------------------------------------------
+
 const allowedOrigins = new Set(
   [
     "https://lacontractors.onrender.com",
@@ -84,57 +88,19 @@ const allowedOrigins = new Set(
     process.env.RENDER_EXTERNAL_URL,
     "http://localhost:3000",
     "http://localhost:5173",
-  ].filter((value): value is string => Boolean(value))
+  ].filter((origin): origin is string => Boolean(origin))
 );
 
 app.use(
   cors({
     origin(origin, callback) {
-      // Allow direct browser visits, health checks, and server requests.
+      // Allow direct visits, health checks, and server-to-server requests.
       if (!origin) {
         callback(null, true);
         return;
       }
 
       if (allowedOrigins.has(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      console.error(`Blocked CORS origin: ${origin}`);
-
-      callback(
-        new Error("This website is not allowed to access the API.")
-      );
-    },
-
-    methods: ["GET", "POST", "OPTIONS"],
-
-    allowedHeaders: [
-      "Content-Type",
-      "Accept",
-    ],
-  })
-);
-
-const allowedOrigins = [
-  "https://amari-stack.github.io",
-  "https://lacontractors.onrender.com",
-  process.env.RENDER_EXTERNAL_URL,
-  "http://localhost:3000",
-  "http://localhost:5173",
-].filter((origin): origin is string => Boolean(origin));
-
-app.use(
-  cors({
-    origin(origin, callback) {
-      // Allow server health checks and requests without an Origin header.
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.includes(origin)) {
         callback(null, true);
         return;
       }
