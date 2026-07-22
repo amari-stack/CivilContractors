@@ -282,20 +282,29 @@ app.get("/{*splat}", (_req, res, next) => {
 
 app.use(
   (
-    error: Error,
-    _request: Request,
+    error: NodeJS.ErrnoException,
+    request: Request,
     response: Response,
     _next: NextFunction
   ) => {
     console.error("Server error:", error);
 
-    response.status(500).json({
+    if (request.path.startsWith("/assets/")) {
+      response.status(error.statusCode || 404).type("text/plain").send(
+        "Static asset could not be found."
+      );
+      return;
+    }
+
+    response.status(error.statusCode || 500).json({
       success: false,
-      message: "An unexpected server error occurred.",
+      message:
+        error.code === "ENOENT"
+          ? "The requested file could not be found."
+          : "An unexpected server error occurred.",
     });
   }
 );
-
 // --------------------------------------------------
 // Connect to MongoDB and start Render server
 // --------------------------------------------------
