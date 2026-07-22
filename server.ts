@@ -1,171 +1,313 @@
-import express from 'express';
-import path from 'path';
-import { MongoClient } from 'mongodb';
-import { createServer as createViteServer } from 'vite';
-import dotenv from 'dotenv';
-import helmet from 'helmet';
-import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import "dotenv/config";
 
-dotenv.config();
+import cors from "cors";
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import mongoose, { Schema, model, models } from "mongoose";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-let mongoClient: MongoClient | null = null;
+// --------------------------------------------------
+// Basic setup
+// --------------------------------------------------
 
-async function getMongoDb() {
-  const uri = process.env.MONGODB_URL || process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error('Neither MONGODB_URL nor MONGODB_URI environment variable is defined');
-  }
-  if (!mongoClient) {
-    mongoClient = new MongoClient(uri);
-    await mongoClient.connect();
-  }
-  
-  // Parse database name from URI if present, otherwise call db() with no argument
-  // to let MongoDB driver fall back to the default database configured in the URI
-  try {
-    const url = new URL(uri);
-    const pathName = url.pathname.replace(/^\//, '');
-    if (pathName && !pathName.startsWith('?')) {
-      return mongoClient.db(pathName);
-    }
-  } catch (e) {
-    // Fall back to default
-  }
-  return mongoClient.db();
+const app = express();
+
+const PORT = Number(process.env.PORT) || 3000;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const distPath = path.join(__dirname, "dist");
+
+// --------------------------------------------------
+// Security and middleware
+// --------------------------------------------------
+
+app.set("trust proxy", 1);
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
+  })
+);
+
+const allowedOrigins = [
+  "https://amari-stack.github.io",
+  "http://localhost:3000",
+  "http://localhost:5173",
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allows requests without an Origin header,
+      // such as health checks and direct browser visits.
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("This website is not allowed to access the API."));
+    },
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Accept"],
+  })
+);
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+const proposalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message:
+      "Too many form submissions were made. Please wait and try again.",
+  },
+});
+
+// --------------------------------------------------
+// MongoDB model
+// --------------------------------------------------
+
+interface ProposalDocument {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  service?: string;
+  message: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-async function startServer() {
-  const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+const proposalSchema = new Schema<ProposalDocument>(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
 
-  // Security & Middleware Configuration
-  app.use(helmet({
-    contentSecurityPolicy: false // Allows Vite inline scripts and standard app assets to load seamlessly
-  }));
-  app.use(cors());
-  app.use(express.json());
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      maxlength: 150,
+    },
 
-  // Express Rate Limiting for API routes
-  const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes window
-    max: 100, // Limit each IP to 100 requests per 15 minutes
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: 'Too many requests from this IP address, please try again later.' }
+    phone: {
+      type: String,
+      trim: true,
+      maxlength: 30,
+    },
+
+    company: {
+      type: String,
+      trim: true,
+      maxlength: 150,
+    },
+
+    service: {
+      type: String,
+      trim: true,
+      maxlength: 150,
+    },
+
+    message: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 3000,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "proposals",
+  }
+);
+
+const Proposal =
+  models.Proposal ||
+  model<ProposalDocument>("Proposal", proposalSchema);
+
+// --------------------------------------------------
+// Health-check routes
+// --------------------------------------------------
+
+app.get("/api/health", (_request: Request, response: Response) => {
+  response.status(200).json({
+    success: true,
+    message: "LA Contractors API is running.",
+    database:
+      mongoose.connection.readyState === 1
+        ? "connected"
+        : "disconnected",
   });
-  app.use('/api/', apiLimiter);
-  app.use('/CivilContractors/api/', apiLimiter);
+});
 
-  // Health check endpoint for monitoring & Render deployment checks
-  app.get(['/api/health', '/CivilContractors/api/health'], (req, res) => {
-    res.status(200).json({
-      status: 'ok',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString()
-    });
+app.get("/api", (_request: Request, response: Response) => {
+  response.status(200).json({
+    success: true,
+    message: "Welcome to the LA Contractors API.",
   });
+});
 
-  // Redirect root / to /CivilContractors/ in development so Vite handles the base path
-  app.get('/', (req, res, next) => {
-    if (process.env.NODE_ENV !== 'production') {
-      return res.redirect('/CivilContractors/');
-    }
-    next();
-  });
+// --------------------------------------------------
+// Proposal form route
+// --------------------------------------------------
 
-  // API Route for proposals (supports direct endpoints and subpath base url endpoints)
-  app.post(['/api/proposal', '/CivilContractors/api/proposal'], async (req, res) => {
+app.post(
+  "/api/proposal",
+  proposalLimiter,
+  async (request: Request, response: Response) => {
     try {
-      const { name, email, phone, company, service, scale, notes } = req.body;
-
-      // Validate required fields
-      if (!name || !email || !phone) {
-        return res.status(400).json({ error: 'Name, email, and phone are required.' });
-      }
-
-      // Check if MONGODB_URL or MONGODB_URI is provided
-      if (!process.env.MONGODB_URL && !process.env.MONGODB_URI) {
-        console.warn('⚠️ MONGODB_URL / MONGODB_URI is not set. Falling back to simulated successful local dispatch.');
-        return res.json({
-          success: true,
-          fallback: true,
-          ticketId: `LA-${Math.floor(10000 + Math.random() * 90000)}`,
-          message: 'Proposal details verified locally! However, to persist this entry securely, configure your MONGODB_URL in Render environment variables.'
-        });
-      }
-
-      const db = await getMongoDb();
-      const collection = db.collection('proposals');
-
-      const ticketId = `LA-${Math.floor(10000 + Math.random() * 90000)}`;
-      const proposalDocument = {
-        ticketId,
+      const {
         name,
         email,
         phone,
-        company: company || '',
-        service: service || '',
-        scale: scale || '',
-        notes: notes || '',
-        createdAt: new Date()
-      };
+        company,
+        service,
+        message,
+      } = request.body as Partial<ProposalDocument>;
 
-      await collection.insertOne(proposalDocument);
-
-      res.status(201).json({
-        success: true,
-        ticketId,
-        message: 'Proposal successfully logged and persisted in MongoDB Atlas!'
-      });
-    } catch (error: any) {
-      console.error('MongoDB operation failed:', error);
-      
-      let friendlyError = 'Failed to save proposal to MongoDB Atlas.';
-      let instruction = '';
-      
-      const errMsg = error?.message || '';
-      if (errMsg.includes('not allowed to do action') || errMsg.includes('unauthorized') || error?.code === 13) {
-        friendlyError = 'Database Write Permission Denied';
-        instruction = 'The MongoDB Atlas database user in your connection string lacks insert/write permissions. Please go to MongoDB Atlas -> Database Access, edit your user, and change their role to "Read and write to any database" or "Atlas admin".';
-      } else if (errMsg.includes('Authentication failed') || errMsg.includes('bad auth')) {
-        friendlyError = 'Database Authentication Failed';
-        instruction = 'The username or password in your MONGODB_URL is incorrect. Please verify your credentials in your MongoDB Atlas connection string.';
+      if (
+        typeof name !== "string" ||
+        typeof email !== "string" ||
+        typeof message !== "string" ||
+        !name.trim() ||
+        !email.trim() ||
+        !message.trim()
+      ) {
+        response.status(400).json({
+          success: false,
+          message: "Name, email, and message are required.",
+        });
+        return;
       }
-      
-      res.status(500).json({
-        error: friendlyError,
-        details: error?.message || String(error),
-        instruction: instruction
+
+      const emailPattern =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailPattern.test(email.trim())) {
+        response.status(400).json({
+          success: false,
+          message: "Please enter a valid email address.",
+        });
+        return;
+      }
+
+      const proposal = await Proposal.create({
+        name: name.trim(),
+        email: email.trim(),
+        phone:
+          typeof phone === "string"
+            ? phone.trim()
+            : undefined,
+        company:
+          typeof company === "string"
+            ? company.trim()
+            : undefined,
+        service:
+          typeof service === "string"
+            ? service.trim()
+            : undefined,
+        message: message.trim(),
+      });
+
+      response.status(201).json({
+        success: true,
+        message:
+          "Your proposal was submitted successfully. We will contact you shortly.",
+        proposalId: proposal._id,
+      });
+    } catch (error) {
+      console.error("Proposal submission failed:", error);
+
+      response.status(500).json({
+        success: false,
+        message:
+          "Your proposal could not be submitted. Please try again.",
       });
     }
-  });
+  }
+);
 
-  // Serve static assets or mount Vite dev server
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa'
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    // Serve static files both at root and under the base path /CivilContractors/
-    app.use('/CivilContractors', express.static(distPath));
-    app.use(express.static(distPath));
-    
-    app.get('*', (req, res) => {
-      // Prevent static asset falls-through from returning index.html
-      if (req.path.includes('/assets/')) {
-        return res.status(404).end();
-      }
-      res.sendFile(path.join(distPath, 'index.html'));
+// --------------------------------------------------
+// Serve the Vite website from the dist folder
+// --------------------------------------------------
+
+app.use(express.static(distPath));
+
+// Express 5 requires a named wildcard.
+// This route sends index.html for React frontend routes.
+app.get("/{*splat}", (_request: Request, response: Response) => {
+  response.sendFile(path.join(distPath, "index.html"));
+});
+
+// --------------------------------------------------
+// Error handler
+// --------------------------------------------------
+
+app.use(
+  (
+    error: Error,
+    _request: Request,
+    response: Response,
+    _next: NextFunction
+  ) => {
+    console.error("Server error:", error);
+
+    response.status(500).json({
+      success: false,
+      message: "An unexpected server error occurred.",
     });
   }
+);
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Fullstack Server running on port ${PORT}`);
+// --------------------------------------------------
+// Connect to MongoDB and start Render server
+// --------------------------------------------------
+
+async function startServer(): Promise<void> {
+  const mongoUri =
+    process.env.MONGODB_URI ||
+    process.env.MONGODB_URL;
+
+  if (!mongoUri) {
+    throw new Error(
+      "MongoDB is not configured. Add MONGODB_URI in Render Environment settings."
+    );
+  }
+
+  await mongoose.connect(mongoUri);
+
+  console.log("Connected to MongoDB.");
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is running on port ${PORT}.`);
   });
 }
 
-startServer();
+startServer().catch((error: unknown) => {
+  console.error("Server startup failed:", error);
+  process.exit(1);
+});
