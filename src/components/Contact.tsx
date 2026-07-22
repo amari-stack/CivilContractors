@@ -149,7 +149,25 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+  name: formData.name,
+  email: formData.email,
+  phone: formData.phone,
+  company: formData.company,
+  service: formData.service,
+
+  message: [
+    formData.scale
+      ? `Project scale: ${formData.scale}`
+      : "",
+
+    formData.notes
+      ? formData.notes
+      : `Proposal request for ${formData.service}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n"),
+}),
       });
 
       const data = await response.json();
