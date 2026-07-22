@@ -255,12 +255,25 @@ app.post(
 // Serve the Vite website from the dist folder
 // --------------------------------------------------
 
-app.use(express.static(distPath));
+app.use(
+  express.static(distPath, {
+    index: false,
+    fallthrough: true,
+  })
+);
 
-// Express 5 requires a named wildcard.
-// This route sends index.html for React frontend routes.
-app.get("/{*splat}", (_request: Request, response: Response) => {
-  response.sendFile(path.join(distPath, "index.html"));
+// Do not send index.html or JSON for missing asset files.
+app.get("/assets/{*assetPath}", (_req, res) => {
+  res.status(404).type("text/plain").send("Asset not found");
+});
+
+// React/Vite page fallback
+app.get("/{*splat}", (_req, res, next) => {
+  res.sendFile(path.join(distPath, "index.html"), (error) => {
+    if (error) {
+      next(error);
+    }
+  });
 });
 
 // --------------------------------------------------
