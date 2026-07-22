@@ -256,14 +256,63 @@ app.post(
 // --------------------------------------------------
 
 
-app.use(express.static(distPath));
+// --------------------------------------------------
+// Serve the built Vite website
+// --------------------------------------------------
 
-app.get("/{*splat}", (_req, res, next) => {
-  res.sendFile(path.join(distPath, "index.html"), (error) => {
-    if (error) {
-      next(error);
+// Serve hashed CSS and JavaScript files.
+app.use(
+  "/assets",
+  express.static(path.join(distPath, "assets"), {
+    maxAge: "1y",
+    immutable: true,
+    fallthrough: false,
+  })
+);
+
+// Serve other public files, but do not automatically serve index.html.
+app.use(
+  express.static(distPath, {
+    index: false,
+    maxAge: 0,
+  })
+);
+
+const sendWebsite = (
+  _request: Request,
+  response: Response,
+  next: NextFunction
+): void => {
+  response.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate"
+  );
+
+  response.sendFile(
+    path.join(distPath, "index.html"),
+    (error) => {
+      if (error) {
+        next(error);
+      }
     }
-  });
+  );
+};
+
+// Homepage
+app.get("/", sendWebsite);
+
+// React page fallback
+app.get("/{*splat}", (request, response, next) => {
+  // Never return index.html for missing API or asset files.
+  if (
+    request.path.startsWith("/api/") ||
+    request.path.startsWith("/assets/")
+  ) {
+    next();
+    return;
+  }
+
+  sendWebsite(request, response, next);
 });
 
 // --------------------------------------------------
