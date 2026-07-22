@@ -41,15 +41,16 @@ app.use(
 
 const allowedOrigins = [
   "https://amari-stack.github.io",
+  "https://lacontractors.onrender.com",
+  process.env.RENDER_EXTERNAL_URL,
   "http://localhost:3000",
   "http://localhost:5173",
-];
+].filter((origin): origin is string => Boolean(origin));
 
 app.use(
   cors({
     origin(origin, callback) {
-      // Allows requests without an Origin header,
-      // such as health checks and direct browser visits.
+      // Allow server health checks and requests without an Origin header.
       if (!origin) {
         callback(null, true);
         return;
@@ -60,10 +61,19 @@ app.use(
         return;
       }
 
-      callback(new Error("This website is not allowed to access the API."));
+      console.error(`Blocked CORS origin: ${origin}`);
+
+      callback(
+        new Error("This website is not allowed to access the API.")
+      );
     },
+
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Accept"],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Accept",
+    ],
   })
 );
 
