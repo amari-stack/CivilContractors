@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import type { FormEvent } from "react";
 import { Mail, Phone, MapPin, Clock, ShieldCheck, CheckCircle, Loader2, AlertCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookingProposal } from '../types';
@@ -118,19 +119,87 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
     validateField(field, formData[field]);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate all fields
-    const nameErr = validateField('name', formData.name);
-    const emailErr = validateField('email', formData.email);
-    const phoneErr = validateField('phone', formData.phone);
+  const handleSubmit = async (
+  event: React.FormEvent<HTMLFormElement>
+): Promise<void> => {
+  event.preventDefault();
+  setIsSubmitting(true);
 
-    setTouched({
-      name: true,
-      email: true,
-      phone: true,
+  try {
+    const apiUrl =
+      window.location.hostname === "amari-stack.github.io"
+        ? "https://lacontractors.onrender.com/api/proposal"
+        : "/api/proposal";
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+        service: formData.service,
+        message: [
+          formData.scale
+            ? `Project scale: ${formData.scale}`
+            : "",
+          formData.notes
+            ? formData.notes
+            : `Proposal request for ${
+                formData.service || "construction services"
+              }`,
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
+      }),
     });
+
+    const contentType =
+      response.headers.get("content-type") || "";
+
+    const data = contentType.includes("application/json")
+      ? await response.json()
+      : {
+          message: await response.text(),
+        };
+
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+          data.error ||
+          "Your proposal could not be submitted."
+      );
+    }
+
+    setTicketId(
+      data.proposalId ||
+        `LA-${Math.floor(10000 + Math.random() * 90000)}`
+    );
+
+    showToast(
+      data.message ||
+        "Your proposal was submitted successfully.",
+      "success"
+    );
+
+    onClearPreFill?.();
+  } catch (error: unknown) {
+    console.error("Submission error:", error);
+
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Your proposal could not be submitted.";
+
+    showToast(errorMessage, "error");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
     if (nameErr || emailErr || phoneErr) {
       showToast('Please correct validation errors in the required fields.', 'error');
@@ -140,65 +209,6 @@ export const Contact: React.FC<ContactProps> = ({ preFill, onClearPreFill }) => 
     setIsSubmitting(true);
     showToast('Submitting site proposal details...', 'info');
 
-    try {
-      setDbError(null);
-      const rawBaseUrl = (import.meta as any).env?.BASE_URL || '/';
-      const baseUrl = rawBaseUrl.replace(/\/$/, '');
-      const response = await fetch(`${baseUrl}/api/proposal`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-  name: formData.name,
-  email: formData.email,
-  phone: formData.phone,
-  company: formData.company,
-  service: formData.service,
-
-  message: [
-    formData.scale
-      ? `Project scale: ${formData.scale}`
-      : "",
-
-    formData.notes
-      ? formData.notes
-      : `Proposal request for ${formData.service}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n"),
-}),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.instruction) {
-          setDbError({
-            error: data.error || 'Database Error',
-            instruction: data.instruction,
-            details: data.details || ''
-          });
-        }
-       throw new Error(
-  data.message ||
-  data.error ||
-  "Failed to submit proposal."
-);
-
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      setTicketId(data.ticketId || `LA-${Math.floor(10000 + Math.random() * 90000)}`);
-      
-      if (data.fallback) {
-        showToast(data.message, 'info');
-      } else {
-        showToast(data.message || 'Proposal logged successfully! Direct dispatch notified.', 'success');
-      }
-      onClearPreFill();
-    } catch (err: any) {
-      console.error('Submission error:', err);
-      setIsSubmitting(false);
       showToast(err.message || 'Could not reach backend server database dispatch.', 'error');
     }
   };
