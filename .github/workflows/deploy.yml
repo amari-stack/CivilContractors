@@ -41,8 +41,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build Application
-        run: npm run build
+      - name: Build application
+  run: npm run build
+  env:
+    VITE_DEPLOY_BASE: /CivilContractors/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
