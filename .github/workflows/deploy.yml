@@ -38,16 +38,16 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
       - name: Build application
-  run: npm run build
-  env:
-    VITE_DEPLOY_BASE: /CivilContractors/
+        run: npm run build
+        env:
+        VITE_DEPLOY_BASE: /CivilContractors/
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
